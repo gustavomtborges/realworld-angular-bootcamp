@@ -1,0 +1,53 @@
+<main style="display: flex; flex-direction: column; align-items: center">
+  <form
+    style="
+      display: flex;
+      flex-direction: column;
+      margin-top: 6rem;
+      width: 300px;
+    "
+    [formGroup]="formGroup"
+    (ngSubmit)="onSubmit()"
+  >
+    <input
+      type="text"
+      placeholder="Email"
+      style="
+        margin-bottom: 12px;
+        padding: 5px;
+        height: 32px;
+        border: solid 1px #ccc;
+        border-radius: 3px;
+      "
+      formControlName="inputName"
+    />
+    <input
+      type="password"
+      placeholder="Password"
+      style="
+        margin-bottom: 12px;
+        padding: 5px;
+        height: 32px;
+        border: solid 1px #ccc;
+        border-radius: 3px;
+      "
+      formControlName="inputPasswd"
+    />
+    <button
+      type="submit"
+      style="align-self: flex-end; padding: 8px; width: 80px"
+      [disabled]="formGroup.invalid"
+    >
+      Sign in
+    </button>
+    <ng-container *ngIf="loginSubmittedResponse$ | async as response"
+      >{{ response }}
+    </ng-container>
+    <ng-container *ngIf="isLoading$ | async as isLoading">{{
+      isLoading
+    }}</ng-container>
+  </form>
+  <div style="margin-top: 50px">
+    {{ formGroup.valueChanges | async | json }}
+  </div>
+</main>
