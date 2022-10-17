@@ -4,7 +4,7 @@
       display: flex;
       flex-direction: column;
       margin-top: 6rem;
-      width: 300px;
+      width: 350px;
     "
     [formGroup]="formGroup"
     (ngSubmit)="onSubmit()"
@@ -33,21 +33,21 @@
       "
       formControlName="inputPasswd"
     />
-    <button
-      type="submit"
-      style="align-self: flex-end; padding: 8px; width: 80px"
-      [disabled]="formGroup.invalid"
-    >
-      Sign in
-    </button>
-    <ng-container *ngIf="loginSubmittedResponse$ | async as response"
-      >{{ response }}
+    <ng-container *ngIf="vm$ | async as vm">
+      <button
+        type="submit"
+        style="align-self: flex-end; padding: 8px; width: 80px"
+        [disabled]="formGroup.invalid || vm.isLoading"
+      >
+        Sign in
+      </button>
+      <div *ngIf="vm.isLoading; else response">aguarde...</div>
+      <ng-template #response>{{ vm.status }}</ng-template>
+      <div style="margin-top: 40px">estado: {{ vm | json }}</div>
     </ng-container>
-    <ng-container *ngIf="isLoading$ | async as isLoading">{{
-      isLoading
-    }}</ng-container>
   </form>
-  <div style="margin-top: 50px">
+  <div style="margin-top: 10px">
+    formGroup
     {{ formGroup.valueChanges | async | json }}
   </div>
 </main>

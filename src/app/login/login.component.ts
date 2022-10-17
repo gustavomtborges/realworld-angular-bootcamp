@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { LoginService } from './login.service';
 
@@ -6,6 +6,8 @@ import { LoginService } from './login.service';
   selector: 'app-login',
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [LoginService],
 })
 export class LoginComponent {
   formGroup = new FormGroup({
@@ -13,12 +15,11 @@ export class LoginComponent {
     inputPasswd: new FormControl('', Validators.required),
   });
 
-  loginSubmittedResponse$ = this.loginService.loginSubmittedResponse$;
-  isLoading$ = this.loginService.isLoading$;
+  vm$ = this.loginService.state$;
 
   onSubmit() {
     const { inputName, inputPasswd } = this.formGroup.value;
-    this.loginService.dispatch({
+    this.loginService.submitForm({
       email: inputName!,
       password: inputPasswd!,
     });

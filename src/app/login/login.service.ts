@@ -1,51 +1,84 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import {
-  catchError,
-  map,
-  mergeMap,
-  Observable,
-  of,
-  tap,
-  Subject,
-  finalize,
-} from 'rxjs';
+import { map, BehaviorSubject, distinctUntilChanged, take } from 'rxjs';
 
-export type state = 'error' | 'success' | '';
-export type payload = { email: string; password: string };
+type Form = {
+  email: string;
+  password: string;
+};
+type State = {
+  isLoading: boolean;
+  status: 'error' | 'success' | 'nao enviado';
+};
 
-@Injectable({
-  providedIn: 'root',
-})
+let _state: State = {
+  isLoading: false,
+  status: 'nao enviado',
+};
+
+@Injectable()
 export class LoginService {
   private readonly API_URL = 'https://api.realworld.io/api';
   constructor(private httpClient: HttpClient) {}
 
-  // action stream / producer
-  private loginSubmittedSubject = new Subject<payload>();
-  loginSubmitted$ = this.loginSubmittedSubject.asObservable();
-  // side efect / producer
-  private loadingSubject = new Subject<boolean>();
-  loading$ = this.loadingSubject.asObservable();
+  private store = new BehaviorSubject<State>(_state);
+  public state$ = this.store.asObservable();
 
-  // data stream estado do login
-  isLoading$ = this.loading$.pipe(map((t) => (t ? 'aguarde...' : '')));
-
-  // data stream estado da resposta
-  loginSubmittedResponse$: Observable<state> = this.loginSubmitted$.pipe(
-    tap(() => this.loadingSubject.next(true)),
-    mergeMap((payload) =>
-      this.httpClient
-        .post(`${this.API_URL}/users/login`, { user: payload })
-        .pipe(
-          map(() => 'success' as state),
-          catchError(() => of('error' as state)),
-          finalize(() => this.loadingSubject.next(false))
-        )
-    )
+  public status$ = this.state$.pipe(
+    map((s) => s.status),
+    distinctUntilChanged()
   );
 
-  dispatch(payload: payload): void {
-    this.loginSubmittedSubject.next(payload);
+  public isLoading$ = this.state$.pipe(
+    map((s) => s.isLoading),
+    distinctUntilChanged()
+  );
+
+  public submitForm(form: Form): void {
+    const newState = this.reducer(
+      { type: 'login request', payload: form },
+      _state
+    );
+    this.setState(newState);
+  }
+
+  private sideEffect(form: Form): void {
+    this.httpClient
+      .post(`${this.API_URL}/users/login`, {
+        user: { email: form.email, password: form.password },
+      })
+      .pipe(take(1))
+      .subscribe({
+        next: () => {
+          const newState = this.reducer({ type: 'login sucesso' }, _state);
+          this.setState(newState);
+        },
+        error: () => {
+          const newState = this.reducer({ type: 'login erro' }, _state);
+          this.setState(newState);
+        },
+      });
+  }
+
+  private reducer(
+    action: { type: string; payload?: Form },
+    state: State
+  ): State {
+    switch (action.type) {
+      case 'login request':
+        this.sideEffect(action.payload!);
+        return { ...state, isLoading: true };
+      case 'login sucesso':
+        return { ...state, isLoading: false, status: 'success' };
+      case 'login erro':
+        return { ...state, isLoading: false, status: 'error' };
+
+      default:
+        return state;
+    }
+  }
+
+  private setState(newState: State): void {
+    this.store.next(newState);
   }
 }
