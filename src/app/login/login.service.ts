@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { map, BehaviorSubject, distinctUntilChanged, take } from 'rxjs';
+import { map, BehaviorSubject, distinctUntilChanged } from 'rxjs';
 
 type Form = {
   email: string;
@@ -47,7 +47,6 @@ export class LoginService {
       .post(`${this.API_URL}/users/login`, {
         user: { email: form.email, password: form.password },
       })
-      .pipe(take(1))
       .subscribe({
         next: () => {
           const newState = this.reducer({ type: 'login sucesso' }, _state);
