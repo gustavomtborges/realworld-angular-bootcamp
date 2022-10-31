@@ -6,17 +6,20 @@ import { LoginService } from './login.service';
 
 describe('LoginService', () => {
   let service: LoginService;
-  let httpClientStub = { post: jest.fn() };
+  let httpClientMock = { post: jest.fn() };
 
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [
         LoginService,
-        { provide: HttpClient, useValue: httpClientStub },
+        { provide: HttpClient, useValue: httpClientMock },
       ],
     });
     service = TestBed.inject(LoginService);
-    httpClientStub.post.mockReset();
+  });
+
+  afterEach(() => {
+    httpClientMock.post.mockReset();
   });
 
   it('should be created', () => {
@@ -32,7 +35,7 @@ describe('LoginService', () => {
   });
 
   it('deve retornar status sucesso ao realizar login com sucesso', (done) => {
-    httpClientStub.post.mockReturnValue(of('login stub').pipe(delay(1)));
+    httpClientMock.post.mockReturnValue(of('login sucesso').pipe(delay(1)));
 
     service.state$.pipe(take(3), toArray()).subscribe((s) => {
       expect(s[2].status).toEqual('success');
@@ -44,7 +47,7 @@ describe('LoginService', () => {
   });
 
   it('deve retornar status erro ao realizar login com erro', (done) => {
-    httpClientStub.post.mockReturnValue(
+    httpClientMock.post.mockReturnValue(
       of('').pipe(
         delay(1),
         switchMap(() => throwError(() => new Error('erro stub')))
